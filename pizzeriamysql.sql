@@ -8,20 +8,16 @@ create table `customer` (
     primary key (`customer_id`)
     );
     
+create table `menu` (
+	`menu_item_id` int not null,
+    `pizza_type` varchar(50),
+    `pizza_price` decimal(5,2),
+    primary key (`menu_item_id`)
+    );
+
 create table `order` (
 	`order_id` int not null,
-    `p1_type` varchar(50),
-    `p1_quantity` int,
-    `p1_price` decimal(5,2),
-	`p2_type` varchar(50),
-    `p2_quantity` int,
-    `p2_price` decimal(5,2),
-	`p3_type` varchar(50),
-    `p3_quantity` int,
-    `p3_price` decimal(5,2),
-	`p4_type` varchar(50),
-    `p4_quantity` int,
-    `p4_price` decimal(5,2),
+    `date_time` datetime,
     `customer_id` int not null,
     primary key (`order_id`),
     foreign key (`customer_id`) references `customer` (`customer_id`)
@@ -30,68 +26,53 @@ create table `order` (
 create table `customer_account` (
 	`order_id` int not null,
     `customer_id` int not null,
-    `date_time` datetime,
+    `menu_item_id` int not null,
+    `item_quantity` int not null,
     foreign key (`order_id`) references `order` (`order_id`),
-    foreign key (`customer_id`) references `customer` (`customer_id`)
+    foreign key (`customer_id`) references `customer` (`customer_id`),
+    foreign key (`menu_item_id`) references `menu` (`menu_item_id`)
     );
     
-insert into `customer` (customer_id, phone, `name`)
-values (1, '226-555-4982', 'Trevor Page');
-
-insert into `customer` (customer_id, phone, `name`)
-values (2, '555-555-9498', 'John Doe');
-
-insert into `order` (order_id, p1_type, p1_quantity, p1_price, p3_type, p3_quantity, p3_price, customer_id)
-values (1, 'Pepperoni & Cheese', 1, 7.99, 'Meat Lovers', 1, 14.99, 1);
-
-insert into `order` (order_id, p2_type, p2_quantity, p2_price, p3_type, p3_quantity, p3_price, customer_id)
-values (2, 'Vegetarian', 1, 9.99, 'Meat Lovers', 2, 14.99, 2);
-
-insert into `order` (order_id, p3_type, p3_quantity, p3_price, p4_type, p4_quantity, p4_price, customer_id)
-values (3, 'Meat Lovers', 1, 14.99, 'Hawaiian', 1, 12.99, 1);
-
-insert into `customer_account` (order_id, customer_id, date_time)
-values (1, 1, '2014-09-10 09:47:00');
-
-insert into `customer_account` (order_id, customer_id, date_time)
-values (2, 2, '2014-09-10 13:20:00');
-
-insert into `customer_account` (order_id, customer_id, date_time)
-values (3, 1, '2014-09-10 09:47:00');
-
 select * from `order`;
 select * from `customer`;
 select * from `customer_account`;
+select * from `menu`;
 
-update `order`
-set p4_quantity = 0, p4_price = 0
-where p4_quantity is null;
+insert into `customer` (customer_id, phone, `name`)
+values (1, '226-555-4982', 'Trevor Page'), (2, '555-555-9498', 'John Doe');
+    
+insert into `menu` (menu_item_id, pizza_type, pizza_price)
+values (1, 'Pepperoni & Cheese', 7.99), (2, 'Vegetarian', 9.99), (3, 'Meat Lovers', 14.99), (4, 'Hawaiian', 12.99);
 
-update `order`
-set p3_quantity = 0, p3_price = 0
-where p3_quantity is null;
+insert into `order` (order_id, date_time, customer_id)
+values (1, '2014-09-10 09:47:00', 1);
 
-update `order`
-set p2_quantity = 0, p2_price = 0
-where p2_quantity is null;
+insert into `order` (order_id, date_time, customer_id)
+values (2, '2014-09-10 13:20:00', 2);
 
-update `order`
-set p1_quantity = 0, p1_price = 0
-where p1_quantity is null;
+insert into `order` (order_id, date_time, customer_id)
+values (3, '2014-09-10 09:47:00', 1);
+
+insert into `customer_account` (order_id, customer_id, menu_item_id, item_quantity)
+values (1, 1, 1, 1), (1, 1, 3, 1);
+
+insert into `customer_account` (order_id, customer_id, menu_item_id, item_quantity)
+values (2, 2, 2, 1), (2, 2, 3, 2);
+
+insert into `customer_account` (order_id, customer_id, menu_item_id, item_quantity)
+values (3, 1, 3, 1), (3, 1, 4, 1);
 
 -- Q4
-select customer_id,
-	   sum( case when 'p1_quantity' is not null then p1_price * p1_quantity else 0 end) + 
-       sum( case when 'p2_quantity' is not null then p2_price * p2_quantity else 0 end) +
-	   sum( case when 'p3_quantity' is not null then p3_price * p3_quantity else 0 end) +
-       sum( case when 'p4_quantity' is not null then p4_price * p4_quantity else 0 end) as `total`
-from `order`
-group by customer_id;
+select ca.customer_id, c.`name`,
+	sum(m.pizza_price * ca.item_quantity) as `total`
+from `customer_account` as ca
+join customer as c on ca.customer_id = c.customer_id
+join `menu` as m on ca.menu_item_id = m.menu_item_id
+group by ca.customer_id;
 
 -- Q5
-select 
-	count(ca.order_id), c.`name`, ca.customer_id, ca.date_time
-from customer_account as ca
+select count(o.order_id), c.`name`, o.customer_id, o.date_time
+from `order` as o
 join customer as c
-on ca.customer_id = c.customer_id
-group by ca.customer_id, ca.date_time;
+on o.customer_id = c.customer_id
+group by o.customer_id, o.date_time;
