@@ -71,8 +71,10 @@ join `menu` as m on ca.menu_item_id = m.menu_item_id
 group by ca.customer_id;
 
 -- Q5
-select count(o.order_id), c.`name`, o.customer_id, o.date_time
-from `order` as o
-join customer as c
-on o.customer_id = c.customer_id
-group by o.customer_id, o.date_time;
+select ca.customer_id, c.`name`, cast(o.date_time as date) date,
+	sum(m.pizza_price * ca.item_quantity) as total
+from `customer_account` as ca
+join customer as c on ca.customer_id = c.customer_id
+join `menu` as m on ca.menu_item_id = m.menu_item_id
+join `order` as o on ca.order_id = o.order_id
+group by ca.customer_id, o.date_time;
